@@ -26,6 +26,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
+                deleteDir()
                 // Currently just making a dummy checkout for local context or replace with actual
                 git branch: 'master',
                     url: 'https://github.com/9046balaji/CodeAlpha_StudentGradeAPI.git'
@@ -90,7 +91,7 @@ pipeline {
         }
         always {
             echo "Pipeline finished. Agent: ${env.NODE_NAME} | Status: ${currentBuild.result}"
-            cleanWs()
+            deleteDir()
         }
     }
 }
