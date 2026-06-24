@@ -22,6 +22,7 @@ RUN wget -q https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-b
     mkdir -p /opt/gradle && \
     unzip -q /tmp/gradle.zip -d /opt/gradle && \
     rm /tmp/gradle.zip && \
+    ln -s /opt/gradle/gradle-${GRADLE_VERSION}/bin/gradle /usr/local/bin/gradle && \
     gradle --version
 
 # Create a dedicated workspace directory for builds
