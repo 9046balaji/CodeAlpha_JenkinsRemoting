@@ -27,8 +27,8 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Currently just making a dummy checkout for local context or replace with actual
-                git branch: 'main',
-                    url: 'https://github.com/ggvfj/CodeAlpha_StudentGradeAPI.git'
+                git branch: 'master',
+                    url: 'https://github.com/9046balaji/CodeAlpha_StudentGradeAPI.git'
                 sh 'ls -la'
             }
         }
