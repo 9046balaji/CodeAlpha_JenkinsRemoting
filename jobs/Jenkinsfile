@@ -1,0 +1,96 @@
+pipeline {
+    agent {
+        label 'gradle'
+    }
+
+    environment {
+        APP_NAME = 'student-grade-api'
+        APP_VERSION = '1.0.0'
+    }
+
+    stages {
+
+        stage('Node Verification') {
+            steps {
+                sh '''
+                    echo "===== Node Information ====="
+                    echo "Hostname: $(hostname)"
+                    echo "User: $(whoami)"
+                    echo "Working directory: $(pwd)"
+                    echo "Java version: $(java -version 2>&1 | head -1)"
+                    echo "Gradle version: $(gradle --version | head -2)"
+                    echo "==========================="
+                '''
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                // Currently just making a dummy checkout for local context or replace with actual
+                git branch: 'main',
+                    url: 'https://github.com/ggvfj/CodeAlpha_StudentGradeAPI.git'
+                sh 'ls -la'
+            }
+        }
+
+        stage('Dependency Resolution') {
+            steps {
+                sh '''
+                    echo "Resolving Gradle dependencies on agent node..."
+                    chmod +x gradlew
+                    ./gradlew dependencies --configuration runtimeClasspath
+                '''
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh '''
+                    echo "Building ${APP_NAME} v${APP_VERSION} on agent: $(hostname)"
+                    ./gradlew clean build -x test
+                '''
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh './gradlew test'
+            }
+            post {
+                always {
+                    junit 'build/reports/tests/test/*.xml'
+                }
+            }
+        }
+
+        stage('Archive Artifact') {
+            steps {
+                archiveArtifacts artifacts: 'build/libs/*.jar',
+                                 fingerprint: true,
+                                 allowEmptyArchive: false
+                echo "JAR archived successfully!"
+            }
+        }
+
+        stage('Build Info') {
+            steps {
+                sh './gradlew buildInfo'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "BUILD SUCCESSFUL on agent: ${env.NODE_NAME}"
+            echo "Build #${env.BUILD_NUMBER} of ${APP_NAME} completed."
+        }
+        failure {
+            echo "BUILD FAILED on agent: ${env.NODE_NAME}"
+            echo "Check the console output for details."
+        }
+        always {
+            echo "Pipeline finished. Agent: ${env.NODE_NAME} | Status: ${currentBuild.result}"
+            cleanWs()
+        }
+    }
+}
