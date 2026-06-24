@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+
+  # ─── Jenkins Controller ───────────────────────────────────────────
+  jenkins-controller:
+    build:
+      context: ./jenkins-controller
+      dockerfile: Dockerfile
+    container_name: jenkins-controller
+    restart: unless-stopped
+    ports:
+      - "8080:8080"     # Jenkins Web UI
+      - "50000:50000"   # JNLP agent port (backup connection method)
+    volumes:
+      # Persist Jenkins data (jobs, configs, credentials) across restarts
+      - jenkins_home:/var/jenkins_home
+      # Mount private SSH key so Controller can connect to Agent
+      - ./ssh-keys/jenkins_agent_key:/var/jenkins_home/ssh-keys/jenkins_agent_key:ro
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    networks:
+      - jenkins-net
+    depends_on:
+      - jenkins-agent
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/login"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+
+  # ─── Jenkins SSH Agent ────────────────────────────────────────────
+  jenkins-agent:
+    build:
+      context: ./jenkins-agent
+      dockerfile: Dockerfile
+    container_name: jenkins-agent
+    restart: unless-stopped
+    expose:
+      - "22"   # SSH — accessible only within jenkins-net, not from your machine
+    volumes:
+      # Dedicated workspace for builds (isolated from Controller)
+      - agent_workspace:/home/jenkins/workspace
+    environment:
+      - JENKINS_AGENT_SSH_PUBKEY=${JENKINS_AGENT_SSH_PUBKEY}
+    networks:
+      - jenkins-net
+    healthcheck:
+      test: ["CMD", "ssh", "-o", "StrictHostKeyChecking=no", "localhost", "exit"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  jenkins-net:
+    driver: bridge
+    name: jenkins-net
+
+volumes:
+  jenkins_home:
+    driver: local
+  agent_workspace:
+    driver: local
