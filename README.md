@@ -44,3 +44,11 @@ Copy the password, then navigate to `http://localhost:8080` in your web browser 
 1. Create a new **Pipeline** job on the Jenkins dashboard.
 2. Under the **Pipeline** section, choose **Pipeline script from SCM** (or just copy-paste the `Jenkinsfile` from this repository).
 3. Build the pipeline and monitor the logs. You will see it successfully executing on `gradle-agent-01`.
+
+## 📸 Output Screenshots
+
+Here are the successful pipeline execution results:
+
+![Jenkins Pipeline Success](outputs/image.png)
+
+![Jenkins Node Status](outputs/image%20copy.png)
