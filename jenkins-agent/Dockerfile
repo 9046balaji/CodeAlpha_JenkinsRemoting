@@ -33,3 +33,6 @@ USER jenkins
 
 # Verify Java and Gradle are available
 RUN java -version && gradle --version
+
+# Switch back to root for the entrypoint (setup-sshd needs root)
+USER root
